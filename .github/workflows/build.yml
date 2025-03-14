@@ -3,10 +3,14 @@ name: Build Vince
 on:
     workflow_dispatch:
     push:
-        branches: ["*"]
+        branches: ["master"]
         tags: ["*"]
     pull_request:
-        branches: [master]
+        branches: ["*"]
+
+defaults:
+    run:
+        shell: bash
 
 jobs:
     build:
@@ -28,7 +32,11 @@ jobs:
 
             - name: Set Vars
               id: vars
-              run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+              env:
+                  REF_NAME: ${{ github.ref_name }}
+              run: |
+                  echo "ref_name=${REF_NAME//\//_}" >> $GITHUB_OUTPUT
+                  echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
             - uses: actions/cache@v4
               if: "!startsWith(github.ref, 'refs/tags/')"
@@ -41,12 +49,12 @@ jobs:
                       ${{ runner.os }}-go-
 
             - name: Build Targets (_scripts/dist.py)
-              run: python _scripts/dist.py --locked --ref "${{ github.ref_name }}"
+              run: python _scripts/dist.py --locked --ref "${{ steps.vars.outputs.ref_name }}"
 
             - name: Upload Artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: vince-artifacts-${{ steps.vars.outputs.sha_short }}
+                  name: vince-artifacts-${{ steps.vars.outputs.ref_name }}-${{ steps.vars.outputs.sha_short }}
                   path: artifacts/
                   if-no-files-found: error
 
@@ -54,8 +62,8 @@ jobs:
               uses: ncipollo/release-action@v1
               if: startsWith(github.ref, 'refs/tags/')
               with:
-                  name: ${{ github.ref_name }}
-                  tag: ${{ github.ref_name }}
+                  name: ${{ steps.vars.outputs.ref_name }}
+                  tag: ${{ steps.vars.outputs.ref_name }}
                   artifacts: artifacts/*
                   generateReleaseNotes: true
                   replacesArtifacts: true

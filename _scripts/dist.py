@@ -32,6 +32,8 @@ if ref_tag == "":
     with open("VERSION", "r") as f:
         ref_tag = f.read()
 
+ref_tag = ref_tag.replace("/", "_")
+
 ################################################################################
 
 if args.tidy:
