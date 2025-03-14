@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/bdandy/go-socks4 v1.2.3
 	github.com/pterm/pterm v0.12.80
-	golang.org/x/net v0.35.0
+	golang.org/x/net v0.36.0
 )
 
 require (
