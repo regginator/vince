@@ -46,7 +46,7 @@ jobs:
             - name: Upload Artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: vince-artifacts-${{ github.ref_name }}-${{ steps.vars.outputs.sha_short }}
+                  name: vince-artifacts-${{ steps.vars.outputs.sha_short }}
                   path: artifacts/
                   if-no-files-found: error
 
