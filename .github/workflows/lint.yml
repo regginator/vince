@@ -1,0 +1,23 @@
+name: Lint (golangci-lint)
+
+on: [push, pull_request]
+
+jobs:
+    lint:
+        name: lint
+        runs-on: ubuntu-latest
+        steps:
+            - name: Setup Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: stable
+
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: golangci-lint
+              uses: golangci/golangci-lint-action@v6
+              with:
+                  version: latest
+                  install-mode: binary
