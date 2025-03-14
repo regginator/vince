@@ -29,7 +29,7 @@ var (
 	ProxyFile  = flag.String("proxies", "", "Path to list of SOCKS(4/5) proxies to use for workers. If not provided, no proxies are used. File must be a txt list of proxies in the format \"scheme://[username:pass@]host[:port]\"")
 
 	// workers
-	NumThreads   = flag.Int("t", 1, "Number of simultanious worker threads. The target server may only be able to handle so many, or it may restrict 1 connection per IP, so proceed with caution")
+	NumThreads   = flag.Int("t", 1, "Number of simultaneous worker threads. The target server may only be able to handle so many, or it may restrict 1 connection per IP, so proceed with caution")
 	NumRetries   = flag.Int("retries", -1, "Number of retry attempts per password for failed connections. -1 means infinite retries")
 	DelaySeconds = flag.Float64("delay", 0, "Delay between connections per worker thread")
 	StartIndex   = flag.Uint64("start", 0, "Start at index n in password iteration")

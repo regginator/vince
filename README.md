@@ -68,7 +68,7 @@ USAGE: ./vince [OPTION]...
   -start uint
     	Start at index n in password iteration
   -t int
-    	Number of simultanious worker threads. The target server may only be able to handle so many, or it may restrict 1 connection per IP, so proceed with caution (default 1)
+    	Number of simultaneous worker threads. The target server may only be able to handle so many, or it may restrict 1 connection per IP, so proceed with caution (default 1)
   -w string
     	If mode is wordlist, path to the wordlist file to source from
 ```
