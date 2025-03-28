@@ -1,11 +1,12 @@
 module github.com/regginator/vince
 
 go 1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/bdandy/go-socks4 v1.2.3
 	github.com/pterm/pterm v0.12.80
-	golang.org/x/net v0.37.0
+	golang.org/x/net v0.38.0
 )
 
 require (
