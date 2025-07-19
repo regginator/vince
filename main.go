@@ -320,7 +320,7 @@ https://github.com/regginator/vince
 		}
 
 		close(pwChan)
-		close(newFailedMsgChan)
+		//close(newFailedMsgChan)
 		threadWg.Wait()
 	}
 }
