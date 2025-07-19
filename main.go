@@ -42,7 +42,7 @@ var (
 	WordlistPath = flag.String("w", "", "If mode is wordlist, path to the wordlist file to source from")
 
 	// -m raw
-	RawCharset = flag.String("chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", "If mode is raw, the character set used for permutations")
+	RawCharset = flag.String("chars", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()?><;:'\"", "If mode is raw, the character set used for permutations")
 	RawRange   = flag.String("range", "1-6", "If mode is raw, min/max number range for password combination length. May be either a single number, or 2 numbers in the format \"1-6\"")
 
 	// bool flags
