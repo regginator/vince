@@ -28,6 +28,11 @@ var (
 	ConnType   = flag.String("conn", "tcp", "Use connection type [tcp, udp]")
 	ProxyFile  = flag.String("proxies", "", "Path to list of SOCKS(4/5) proxies to use for workers. If not provided, no proxies are used. File must be a txt list of proxies in the format \"scheme://[username:pass@]host[:port]\"")
 
+	IsNoVnc             = flag.Bool("novnc", false, "Specifies that the host is a noVNC server, and to connect over WebSocket")
+	NoVncIsWss          = flag.Bool("novnc-wss", false, "If -novnc, connects to the noVNC server over wss instead of ws (cert is ignored)")
+	NoVncWebsockifyPath = flag.String("novnc-websockify-path", "/websockify", "If -novnc, the noVNC Websockify path (relative to /) to connect over")
+	NoVncUserAgent      = flag.String("novnc-ua", "", "If -novnc, the User-Agent header to pass when connecting to Websockify")
+
 	// workers
 	NumThreads   = flag.Int("t", 1, "Number of simultaneous worker threads. The target server may only be able to handle so many, or it may restrict 1 connection per IP, so proceed with caution")
 	NumRetries   = flag.Int("retries", -1, "Number of retry attempts per password for failed connections. -1 means infinite retries")
@@ -68,7 +73,7 @@ func usage(exitCode int) {
 }
 
 func main() {
-	fmt.Printf(`ViNCe v%s
+	fmt.Fprintf(os.Stderr, `ViNCe v%s
 MIT License | Copyright (c) 2025 reggie@latte.to
 https://github.com/regginator/vince
 
@@ -239,9 +244,13 @@ https://github.com/regginator/vince
 						}
 
 						client := &rfb.Client{
-							DestAddr:    realTargetAddr,
-							ConnType:    *ConnType,
-							PacketDebug: *PacketDebug,
+							DestAddr:            realTargetAddr,
+							ConnType:            *ConnType,
+							PacketDebug:         *PacketDebug,
+							IsNoVnc:             *IsNoVnc,
+							NoVncIsWss:          *NoVncIsWss,
+							NoVncWebsockifyPath: *NoVncWebsockifyPath,
+							NoVncUserAgent:      *NoVncUserAgent,
 						}
 
 						foundPwFunc := func(msg string) {
@@ -320,7 +329,7 @@ https://github.com/regginator/vince
 		}
 
 		close(pwChan)
-		//close(newFailedMsgChan)
 		threadWg.Wait()
+		close(newFailedMsgChan)
 	}
 }

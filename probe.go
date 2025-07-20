@@ -12,9 +12,13 @@ func doInitProbe() {
 	pterm.Info.Println("Performing initial probe.. 🛸")
 
 	client := &rfb.Client{
-		DestAddr:    realTargetAddr,
-		ConnType:    *ConnType,
-		PacketDebug: *PacketDebug,
+		DestAddr:            realTargetAddr,
+		ConnType:            *ConnType,
+		PacketDebug:         *PacketDebug,
+		IsNoVnc:             *IsNoVnc,
+		NoVncIsWss:          *NoVncIsWss,
+		NoVncWebsockifyPath: *NoVncWebsockifyPath,
+		NoVncUserAgent:      *NoVncUserAgent,
 	}
 
 	if proxyPool != nil {

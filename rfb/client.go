@@ -3,15 +3,19 @@ package rfb
 import (
 	"bytes"
 	"crypto/des"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
 	"math/bits"
 	"net"
+	"net/http"
 	"net/url"
+	"time"
 
 	_ "github.com/bdandy/go-socks4"
+	"github.com/gorilla/websocket"
 	"github.com/regginator/vince/util"
 	"golang.org/x/net/proxy"
 )
@@ -21,20 +25,48 @@ import (
 
 type Client struct {
 	// Params for frontend
+
 	DestAddr    string
 	ConnType    string
 	ProxyAddr   string // Passed to url.Parse, e.g. "socks5://127.0.0.1:1080". If empty, proxy is not used
 	PacketDebug bool   // Enables 2-way logging of packet hex dumps for debugging
 
+	IsNoVnc             bool
+	NoVncIsWss          bool
+	NoVncWebsockifyPath string
+	NoVncUserAgent      string
+
+	// Meant to be set internally, but accessible by frontend
+
 	Conn           net.Conn
 	ProtoVer       string // Negotiated protocol version
 	ServerProtoVer string // Protocol version that the server initially reports in its banner, not necessarily the negotiated proto ver
 	SecurityTypes  []VncAuth
-
 	SecurityResult SecurityResult
 }
 
-// Internal recv and send wrappers, primarily for packet debugging
+// I should NOT have to do this
+type websocketNetConn struct {
+	*websocket.Conn
+}
+
+func (c *websocketNetConn) Read(b []byte) (int, error) {
+	_, out, err := c.Conn.ReadMessage()
+	n := copy(b, out)
+	return n, err
+}
+
+func (c *websocketNetConn) Write(b []byte) (int, error) {
+	err := c.Conn.WriteMessage(websocket.BinaryMessage, b)
+	return len(b), err // We're larping about how many bytes we wrote
+}
+
+func (c *websocketNetConn) SetDeadline(t time.Time) error {
+	// MEGA LARPING
+	return nil
+}
+
+// Internal recv and send wrappers
 
 func (client *Client) read(buf []byte) (int, error) {
 	n, err := client.Conn.Read(buf)
@@ -68,14 +100,55 @@ func (client *Client) Connect() error {
 		connType = "tcp"
 	}
 
-	if client.ProxyAddr != "" {
-		// Use proxy (SOCKS) for connection
-		url, err := url.Parse(client.ProxyAddr)
+	if client.IsNoVnc {
+		scheme := "ws"
+		if client.NoVncIsWss {
+			scheme = "wss"
+		}
+
+		u := url.URL{Scheme: scheme, Host: client.DestAddr, Path: client.NoVncWebsockifyPath}
+		h := http.Header{}
+
+		if client.NoVncUserAgent != "" {
+			h.Set("User-Agent", client.NoVncUserAgent)
+		}
+
+		wsDialer := &websocket.Dialer{
+			HandshakeTimeout:  45 * time.Second,
+			EnableCompression: true,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+
+		// Also support proxies
+		if client.ProxyAddr != "" {
+			proxyUrl, err := url.Parse(client.ProxyAddr)
+			if err != nil {
+				return err
+			}
+			proxyDialer, err := proxy.FromURL(proxyUrl, proxy.Direct)
+			if err != nil {
+				return err
+			}
+
+			wsDialer.NetDial = proxyDialer.Dial
+		}
+
+		conn, _, err := wsDialer.Dial(u.String(), h)
 		if err != nil {
 			return err
 		}
 
-		dialer, err := proxy.FromURL(url, proxy.Direct)
+		client.Conn = &websocketNetConn{conn}
+	} else if client.ProxyAddr != "" {
+		// Use proxy (SOCKS) for connection
+		proxyUrl, err := url.Parse(client.ProxyAddr)
+		if err != nil {
+			return err
+		}
+
+		dialer, err := proxy.FromURL(proxyUrl, proxy.Direct)
 		if err != nil {
 			return err
 		}
